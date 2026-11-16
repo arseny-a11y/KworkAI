@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class KworkParser:
 
-    def __init__(self, cookies: dict, url: str = "https://kwork.ru/projects"):
+    def __init__(self, url: str = "https://kwork.ru/projects"):
         self.url = url
         self.cookies = self._load_cookies()
         self.session = None
@@ -122,14 +122,3 @@ class KworkParser:
 
         return project_info
     
-async def main():
-
-    
-
-    parser = KworkParser()
-
-    data = await parser.response_api()
-    print(len(parser.json_parser(data)))
-
-if __name__ == "__main__":
-    asyncio.run(main())
