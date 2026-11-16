@@ -1,17 +1,20 @@
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession 
+from config.config import settings
+from database.database import init_db
 import asyncio
 import logging
-from config.config import settings
-
 async def main():
-    
+
     logging.basicConfig(level=logging.INFO)
     session = AiohttpSession(proxy=settings.PROXY)
 
+    
     bot = Bot(settings.TOKEN, session=session)
     dp = Dispatcher()
 
+    await init_db()
+    
     try:
         print("Бот запущен!")
         await bot.delete_webhook(drop_pending_updates=True)

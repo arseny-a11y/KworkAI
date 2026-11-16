@@ -111,12 +111,12 @@ class KworkParser:
             user = order.get("user", {})
             
             project_info.append({
-                "id" : project_id,
+                "project_id" : project_id,
                 "name" : name,
                 "description" : description,
-                "price_limit" : order.get("priceLimit"),
+                "price_limit" : int(float(order.get("priceLimit") or 0)),
                 "client_username" : user.get("username", "Отсутствует"),
-                "client_hired_percent" : user.get("data", {}).get("wants_hired_percent"),
+                "client_hired_percent" : int((user.get("data") or {}).get("wants_hired_percent") or 0),
                 "url" : f"{self.url}/{project_id}/view"
             })
 
