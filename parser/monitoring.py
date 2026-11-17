@@ -35,7 +35,7 @@ def generation_kb(project_id: int) -> InlineKeyboardMarkup:
     kb.button(text="✨ Сгенерировать отклик", callback_data=f"prj_generation:{project_id}")
     return kb.as_markup()
 
-async def monitoring_kwork(bot: Bot, chat_id: int, url: str, interval: int):
+async def monitoring_kwork(bot: Bot, chat_id: int, interval: int):
     is_first = True
 
     try:
@@ -62,7 +62,7 @@ async def monitoring_kwork(bot: Bot, chat_id: int, url: str, interval: int):
                         parse_mode="HTML",
                         reply_markup=generation_kb(project.project_id)
                     )
-                    
+
             asyncio.sleep(interval)
 
     except asyncio.CancelledError:
@@ -71,3 +71,38 @@ async def monitoring_kwork(bot: Bot, chat_id: int, url: str, interval: int):
 
     finally:
         kworkparser.close()
+
+class MonitorManager:
+    def __init__(self):
+        self.interval: int = 300
+        self._task: asyncio.Task | None = None
+
+    @property
+    def is_running(self) -> bool:
+        return self._task is not None and not self._task.done()
+
+    def set_interval(self, number: int) -> None:
+        self.interval = number
+
+    def start_monitoring(self, bot: Bot, chat_id: int) -> tuple[bool, str]:
+        if self.is_running:
+            return False, "⭕ Мониторинг уже активно работает!"
+        
+        self._task = asyncio.create_task(
+            monitoring_kwork(
+                bot=bot,
+                chat_id=chat_id,
+                interval=self.interval
+            )
+        )
+        return True, "✅ Мониторинг успешно запущен!"
+    
+    def stop_monitoring(self) -> tuple[bool, str]:
+        if not self.is_running:
+            return False, "⭕ Мониторинг не был запущен"
+
+        self._task.cancel()
+        self._task = None
+
+        return True, "✅ Мониторинг успешно остановлен"
+
