@@ -42,7 +42,7 @@ class KworkParser:
             self.session = AsyncSession()
 
     #закрываем сессию, если она существует
-    async def _close(self):
+    async def close(self):
         if self.session:
             await self.session.close()
             self.session = None
@@ -115,10 +115,11 @@ class KworkParser:
                 "name" : name,
                 "description" : description,
                 "price_limit" : int(float(order.get("priceLimit") or 0)),
-                "client_username" : user.get("username", "Отсутствует"),
+                "client_username" : user.get("username", "Никнейм не указан"),
                 "client_hired_percent" : int((user.get("data") or {}).get("wants_hired_percent") or 0),
                 "url" : f"{self.url}/{project_id}/view"
             })
 
         return project_info
     
+kworkparser = KworkParser()
