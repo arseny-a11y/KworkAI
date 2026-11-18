@@ -25,12 +25,12 @@ async def save_items(data: list[dict]):
         for prj in data:
             prj_id = prj.get("project_id")
 
-            if prj_id is not None in projects_id_in_db:
+            if prj_id is None or prj_id in projects_id_in_db:
                 continue
 
             new_projects.append(
                 KworkProjects(
-                    projects_id=prj_id,
+                    project_id=prj_id,
                     name=prj.get("name"),
                     description=prj.get("description"),
                     price_limit=prj.get("price_limit"),

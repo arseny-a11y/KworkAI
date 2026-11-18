@@ -111,7 +111,7 @@ class KworkParser:
             user = order.get("user", {})
             
             project_info.append({
-                "project_id" : project_id,
+                "project_id" : int(project_id),
                 "name" : name,
                 "description" : description,
                 "price_limit" : int(float(order.get("priceLimit") or 0)),

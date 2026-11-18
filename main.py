@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession 
 from config.config import settings
 from database.database import init_db
+from handlers.commands import monitor_router
 import asyncio
 import logging
 async def main():
@@ -14,7 +15,7 @@ async def main():
     dp = Dispatcher()
 
     await init_db()
-    
+    dp.include_router(monitor_router)
     try:
         print("Бот запущен!")
         await bot.delete_webhook(drop_pending_updates=True)

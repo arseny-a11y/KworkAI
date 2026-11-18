@@ -40,37 +40,44 @@ async def monitoring_kwork(bot: Bot, chat_id: int, interval: int):
 
     try:
         while True:
+            try:
+                data = await kworkparser.response_api()
+                
+                project_data = kworkparser.json_parser(data)
 
-            data = await kworkparser.response_api()
-            project_data = kworkparser.json_parser(data)
+                new_projects = await save_items(project_data)
 
-            new_projects = await save_items(project_data)
+                # if is_first:
+                #     if new_projects:
+                #         logger.info(f"[INFO] | База успешно инициализирована, сохранено: {len(new_projects)}")
+                #     is_first = False
 
-            if is_first:
                 if new_projects:
-                    logger.info(f"[INFO] | База успешно инициализирована, сохранено: {len(new_projects)}")
-                is_first = False
+                    logger.info(f"[INFO] | Обнаружены новые проекты: {len(new_projects)}")
 
-            elif new_projects:
-                logger.info(f"[INFO] | Обнаружены новые проекты: {len(new_projects)}")
-                for project in new_projects:
-                    text = format_text(project)
+                    for project in new_projects:
+                        text = format_text(project)
 
-                    await bot.send_message(
-                        text=text,
-                        chat_id=chat_id,
-                        parse_mode="HTML",
-                        reply_markup=generation_kb(project.project_id)
-                    )
+                        await bot.send_message(
+                            text=text,
+                            chat_id=chat_id,
+                            parse_mode="HTML",
+                            reply_markup=generation_kb(project.project_id)
+                        )
 
-            asyncio.sleep(interval)
+                        await asyncio.sleep(0.5)
+
+            except Exception as e:
+                logger.exception(f"[ERROR] | Ошибка при работе мониторинга: {e}")
+
+            await asyncio.sleep(interval)
 
     except asyncio.CancelledError:
         logger.info("[INFO] | Задача мониторинга принудительно остановлена")
         raise
 
     finally:
-        kworkparser.close()
+        await kworkparser.close()
 
 class MonitorManager:
     def __init__(self):
@@ -81,10 +88,16 @@ class MonitorManager:
     def is_running(self) -> bool:
         return self._task is not None and not self._task.done()
 
-    def set_interval(self, number: int) -> None:
+    async def set_interval(self, number: int, bot: Bot, chat_id: int) -> None:
+        if self.is_running:
+            await self.stop_monitoring()
+        
         self.interval = number
 
-    def start_monitoring(self, bot: Bot, chat_id: int) -> tuple[bool, str]:
+        if self.is_running and bot and chat_id:
+            await self.start_monitoring(bot, chat_id)
+
+    async def start_monitoring(self, bot: Bot, chat_id: int) -> tuple[bool, str]:
         if self.is_running:
             return False, "⭕ Мониторинг уже активно работает!"
         
@@ -97,7 +110,7 @@ class MonitorManager:
         )
         return True, "✅ Мониторинг успешно запущен!"
     
-    def stop_monitoring(self) -> tuple[bool, str]:
+    async def stop_monitoring(self) -> tuple[bool, str]:
         if not self.is_running:
             return False, "⭕ Мониторинг не был запущен"
 
@@ -106,3 +119,4 @@ class MonitorManager:
 
         return True, "✅ Мониторинг успешно остановлен"
 
+manager = MonitorManager()
