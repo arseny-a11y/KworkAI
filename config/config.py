@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     TOKEN: str
     PROXY: str
-
+    OPEN_ROUTER_API: str
+    
     @property
     def database_url_aiosqlite(self) -> str:
         return "sqlite+aiosqlite:///database/database.db"
