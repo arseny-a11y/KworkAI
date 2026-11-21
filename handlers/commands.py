@@ -1,7 +1,12 @@
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
-from aiogram import Router, Bot
+from aiogram import Router, Bot, F
+from sqlalchemy import select
+from database.database import async_factory
+from database.models import KworkProjects
 from parser.monitoring import manager
+from integrations.openrouter import response_ai
+from html import escape
 
 monitor_router = Router()
 
@@ -79,3 +84,39 @@ async def cmd_status_monitor(message: Message):
     )
 
     await message.answer(text=text, parse_mode="HTML")
+
+#обработка кнопки нажатия "Сгенерировать отклик"
+@monitor_router.callback_query(F.data.startswith("prj_generation:"))
+async def generation_response(callback: CallbackQuery):
+    await callback.answer("⏳ Генерирую отклик...")
+    project_id = int(callback.data.split(":")[-1])
+
+    async with async_factory() as session:
+
+        project = await session.scalar(select(KworkProjects).where(KworkProjects.project_id == project_id))
+
+        if not project:
+            return await callback.message.answer("❌ Не удалось найти проект по данному ID")
+        
+        name = project.name
+        description = project.description
+
+
+    result = await response_ai(name, description)
+    # if not result:
+
+
+    safe_title = escape(name or "Проект без названия")    
+    safe_response = escape(result or "Пустой ответ от ИИ")
+
+
+    if len(safe_response) > 3800:
+        safe_response = safe_response[:3800] + "..."
+
+    formatted_text = (
+        f"🤖 <b>Отклик готов</b>\n"
+        f"📌 <b>Проект:</b> {safe_title}\n\n"
+        f"<blockquote>{safe_response}</blockquote>"
+    )    
+
+    await callback.message.reply(formatted_text, parse_mode="HTML")

@@ -17,15 +17,15 @@ async def save_items(data: list[dict]):
         return []
 
     async with async_factory() as session:
-        projects_in_db = (await session.scalars(select(KworkProjects).where(KworkProjects.project_id.in_(projects_id)))).all()
-        projects_id_in_db = {prj_id.project_id for prj_id in projects_in_db}
+        projects_in_db = set((await session.scalars(select(KworkProjects.project_id).where(KworkProjects.project_id.in_(projects_id)))).all())
+        #projects_id_in_db = {prj_id.project_id for prj_id in projects_in_db}
 
         new_projects = []
 
         for prj in data:
             prj_id = prj.get("project_id")
 
-            if prj_id is None or prj_id in projects_id_in_db:
+            if prj_id is None or prj_id in projects_in_db :
                 continue
 
             new_projects.append(

@@ -2,6 +2,7 @@ from curl_cffi.requests import AsyncSession
 from curl_cffi.requests.exceptions import HTTPError, RequestException
 import asyncio
 import logging
+import html
 import json
 
 logger = logging.getLogger(__name__)
@@ -76,8 +77,13 @@ class KworkParser:
         except Exception as e:
             logger.error(f"[ERROR] | Непредвиденная ошибка: {e}")
             return {}
-
-
+        
+    @staticmethod
+    def clean_json_text(raw_text: str | None) -> str:
+        if not raw_text:
+            return ""
+        return html.unescape(raw_text).strip()
+    
     def json_parser(self, data: dict) -> list[dict]:
         if not data:
             logger.info("[INFO] | Словарь не содержит данных")
@@ -105,8 +111,8 @@ class KworkParser:
             set_ids.add(project_id)
 
             #безопасно достаем данные
-            name = (order.get("name") or "").replace("\r", "").replace("\n", "")
-            description = (order.get("description") or "").replace("\r", "").replace("\n", "")
+            name = self.clean_json_text((order.get("name") or "").replace("\r", " ").replace("\n", " "))
+            description = self.clean_json_text((order.get("description") or "").replace("\r", "").replace("\n", " "))
 
             user = order.get("user", {})
             

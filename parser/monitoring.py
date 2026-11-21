@@ -3,6 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardMarkup
 from parser.engine import kworkparser
 from parser.save_items import save_items
+import html
 import asyncio
 import logging
 
@@ -11,20 +12,20 @@ logger = logging.getLogger(__name__)
 
 def format_text(project: object) -> str:
 
-    name = project.name if project.name else "Название отсутствует"
-    description = project.description if project.description else "Описание отсутствует"
-    price_limit = project.price_limit if project.price_limit != 0 else "Цена не указана"
-    client_username = project.client_username
+    name = html.escape(project.name) if project.name else "Название отсутствует"
+    description = html.escape(project.description) if project.description else "Описание отсутствует"
+    price_limit = f"{project.price_limit} ₽" if project.price_limit != 0 else "Цена не указана"
+    client_username = html.escape(project.client_username)
     client_hired_percent = project.client_hired_percent
-    url = project.url if project.url else "Не удалось собрать ссылку"
+    url = f"🔗 <a href='{project.url}'>Открыть проект на Kwork</a>" if project.url else "🔗 Ссылка отсутствует"
 
     message_text = (
       f"🔥 <b>Новый проект на Kwork!</b>\n\n"
       f"📌 <b>{name}</b>\n\n"
       f"💰 <b>Бюджет:</b> {price_limit}\n"
-      f"👤 <b>Заказчик:</b> <code>{client_username}</code> (Найм: {client_hired_percent})\n\n"
-      f"📝 <b>Описание:</b>\n<i>{description}</i>\n\n"
-      f"🔗 <a href='{project.url}'>Открыть проект на Kwork</a>"
+      f"👤 <b>Заказчик:</b> <code>{client_username}</code> (Найм: {client_hired_percent} %)\n\n"
+      f"📝 <b>Описание:</b>\n<i>{html.escape(description)}</i>\n\n"
+      f"{url}"
     )
 
     return message_text
